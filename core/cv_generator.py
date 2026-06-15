@@ -96,9 +96,16 @@ ATS RULES:
 - NEVER spell out numbers — always use digits and % symbol (e.g. "40%", "60%", "12 microservices")
 - NEVER expand common tech abbreviations like UUID, EC2, AWS, API, CI/CD, NLP, RAG, ETL
 - Use RAG not "Retrieval Augmented Generation", use CI/CD not "Continuous Integration..."
-- Include exact keyword phrases from the JD naturally
 - Plain text format only
 - Keep bullet points concise — max 2 lines each
+
+CRITICAL RULES — NEVER VIOLATE:
+- NEVER add any skill, tool, or technology not explicitly listed in the BASE CV above
+- NEVER add PowerBI, Tableau, Dataiku, Alteryx, R, or any tool not in the base CV skills
+- NEVER fabricate experience or metrics not in the base CV
+- ONLY use skills from this exact list: Python, JavaScript, SQL, HTML, CSS, Node.js, NLP, PyTorch, TensorFlow, LangChain, RAG, Embeddings, ChromaDB, Pandas, NumPy, PySpark, FastAPI, Flask, Django, React JS, AWS, EC2, S3, Lambda, ECR, ECS, Docker, Nginx, GitHub Actions, PostgreSQL, Redis, spaCy
+- You may reword and reorder existing content but NEVER invent new skills
+- If a JD requires a skill Srikar does not have, do NOT add it to the CV
 
 Output the complete rewritten CV. Nothing else."""
 
