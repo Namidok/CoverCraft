@@ -93,9 +93,12 @@ Rewrite the CV following these rules:
 ATS RULES:
 - Use standard section headers: SUMMARY, EXPERIENCE, EDUCATION, SKILLS, PROJECTS
 - No tables, no columns, no special characters except bullets (-)
-- Spell out abbreviations on first use
-- Include exact keyword phrases from the JD
+- NEVER spell out numbers — always use digits and % symbol (e.g. "40%", "60%", "12 microservices")
+- NEVER expand common tech abbreviations like UUID, EC2, AWS, API, CI/CD, NLP, RAG, ETL
+- Use RAG not "Retrieval Augmented Generation", use CI/CD not "Continuous Integration..."
+- Include exact keyword phrases from the JD naturally
 - Plain text format only
+- Keep bullet points concise — max 2 lines each
 
 Output the complete rewritten CV. Nothing else."""
 
