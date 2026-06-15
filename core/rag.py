@@ -19,9 +19,25 @@ splitter = RecursiveCharacterTextSplitter(
 )
 
 
+def sanitize_name(name: str) -> str:
+    import re
+    # lowercase, replace spaces and special chars with hyphens
+    clean = re.sub(r'[^a-z0-9-]', '-', name.lower())
+    # remove consecutive hyphens
+    clean = re.sub(r'-+', '-', clean)
+    # ensure starts and ends with alphanumeric
+    clean = clean.strip('-')
+    # ensure minimum 3 chars
+    if len(clean) < 3:
+        clean = clean + "job"
+    # truncate to 40 chars
+    clean = clean[:40].rstrip('-')
+    return clean
+
 def get_or_create_collection(name: str):
+    safe_name = sanitize_name(name)
     return client.get_or_create_collection(
-        name=name,
+        name=safe_name,
         metadata={"hnsw:space": "cosine"},
     )
 
@@ -75,7 +91,7 @@ def add_cv(text: str):
 def add_jd(text: str, company: str, role: str):
     """Store a job description in the 'jds' collection."""
     return add_document(
-        f"jd_{company.lower().replace(' ', '_')}",
+        f"jd-{company.lower().replace(' ', '-')[:40]}",
         text,
         {"type": "jd", "company": company, "role": role},
     )
@@ -88,5 +104,5 @@ def get_cv_context(query: str, n: int = 5):
 
 def get_jd_context(company: str, query: str, n: int = 5):
     """Retrieve relevant JD chunks for a company."""
-    collection_name = f"jd_{company.lower().replace(' ', '_')}"
+    collection_name = f"jd-{company.lower().replace(' ', '-')[:40]}"
     return query_collection(collection_name, query, n)

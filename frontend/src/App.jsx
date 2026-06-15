@@ -12,6 +12,7 @@ export default function App() {
     skillGap,
     coverLetter,
     customCv,
+    atsScore,
     loading,
     error,
     analyseGap,
@@ -36,7 +37,7 @@ export default function App() {
         <div className="bg-white border border-border rounded-2xl p-8 shadow-sm">
           {step === 1 && <Step1JobDetails form={form} setForm={setForm} analyseGap={analyseGap} loading={loading} error={error} />}
           {step === 2 && <Step2SkillGap skillGap={skillGap} form={form} generate={generate} loading={loading} error={error} setStep={setStep} />}
-          {step === 3 && <Step3Generate coverLetter={coverLetter} customCv={customCv} form={form} setStep={setStep} downloadPdf={downloadPdf} error={error} />}
+          {step === 3 && <Step3Generate coverLetter={coverLetter} customCv={customCv} atsScore={atsScore} form={form} setStep={setStep} downloadPdf={downloadPdf} error={error} />}
           {step === 4 && <Step4Download form={form} downloadPdf={downloadPdf} reset={reset} error={error} />}
         </div>
       </main>

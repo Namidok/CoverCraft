@@ -7,6 +7,7 @@ export default function useCoverCraft() {
   const [skillGap, setSkillGap] = useState(null)
   const [coverLetter, setCoverLetter] = useState("")
   const [customCv, setCustomCv] = useState("")
+  const [atsScore, setAtsScore] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -35,6 +36,7 @@ export default function useCoverCraft() {
       const res = await axios.post("/api/generate-all", form)
       setCoverLetter(res.data.cover_letter)
       setCustomCv(res.data.cv)
+      setAtsScore(res.data.ats_score)
       setStep(3)
     } catch {
       setError("Generation failed. Please try again.")
@@ -70,6 +72,7 @@ export default function useCoverCraft() {
     setSkillGap(null)
     setCoverLetter("")
     setCustomCv("")
+    setAtsScore(null)
     setError("")
   }
 
@@ -79,6 +82,7 @@ export default function useCoverCraft() {
     skillGap,
     coverLetter,
     customCv,
+    atsScore,
     loading,
     error,
     analyseGap,
