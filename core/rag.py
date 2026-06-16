@@ -42,9 +42,25 @@ def get_or_create_collection(name: str):
     )
 
 
+def clean_text(text: str) -> str:
+    """Remove non-printable and binary characters from text."""
+    import re
+    # Remove non-printable characters
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', text)
+    # Remove replacement characters
+    text = text.replace('\ufffd', '').replace('<|reserved_special_token', '')
+    # Remove lines that look like binary garbage (high ratio of special chars)
+    lines = []
+    for line in text.split('\n'):
+        printable = sum(c.isprintable() for c in line)
+        if len(line) == 0 or (printable / len(line)) > 0.85:
+            lines.append(line)
+    return '\n'.join(lines).strip()
+
 def add_document(collection_name: str, text: str, metadata: dict = None):
     """Split text into chunks, embed, and store in ChromaDB."""
     collection = get_or_create_collection(collection_name)
+    text = clean_text(text)
     chunks = splitter.split_text(text)
 
     ids = [f"{collection_name}_{i}" for i in range(len(chunks))]

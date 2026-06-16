@@ -32,12 +32,15 @@ def generate_cover_letter_pdf(text: str, company: str, role: str) -> bytes:
 
     story = []
     story.append(Paragraph("Srikar Kodi", name_style))
+    story.append(Spacer(1, 2*mm))
     story.append(Paragraph("kodisrikar@gmail.com · +49-1634218928 · Berlin, Germany", contact_style))
+    story.append(Spacer(1, 1*mm))
     story.append(Paragraph("linkedin.com/in/srikar-kodi-046a631b2/ · github.com/Namidok", contact_style))
-    story.append(Spacer(1, 3*mm))
+    story.append(Spacer(1, 4*mm))
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#cccccc")))
-    story.append(Spacer(1, 3*mm))
+    story.append(Spacer(1, 4*mm))
     story.append(Paragraph(f"Cover Letter — {role} at {company}", label_style))
+    story.append(Spacer(1, 2*mm))
 
     for para in text.strip().split("\n\n"):
         if para.strip():

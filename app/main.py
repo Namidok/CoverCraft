@@ -169,3 +169,43 @@ async def skill_gap_endpoint(request: GenerateRequest):
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "CoverCraft"}
+
+
+@app.post("/upload-cv-pdf")
+async def upload_cv_pdf(file: UploadFile = File(...)):
+    """Upload CV as PDF — extracts text using PyMuPDF."""
+    import fitz
+    import re
+    
+    content = await file.read()
+    
+    try:
+        doc = fitz.open(stream=content, filetype="pdf")
+        text = ""
+        for page in doc:
+            text += page.get_text("text")
+        doc.close()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not read PDF: {str(e)}")
+    
+    # Clean the extracted text
+    # Remove non-printable characters
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', text)
+    # Remove any remaining binary garbage
+    text = re.sub(r'[^\x20-\x7e\n\r\t\u00c0-\u024f]', '', text)
+    # Remove lines with too many special characters
+    clean_lines = []
+    for line in text.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+        printable = sum(1 for c in line if c.isprintable())
+        if len(line) == 0 or printable / len(line) > 0.85:
+            clean_lines.append(line)
+    text = '\n'.join(clean_lines).strip()
+    
+    if not text or len(text) < 100:
+        raise HTTPException(status_code=400, detail="Could not extract readable text from PDF. Please try paste text mode.")
+    
+    chunks = add_cv(text)
+    return {"message": f"CV extracted and indexed into {chunks} chunks.", "preview": text[:300]}
