@@ -3,7 +3,7 @@ import { useState } from "react"
 function ATSScore({ ats }) {
   if (!ats) return null
 
-  const { overall, grade, breakdown, improvements } = ats
+  const { overall, grade, base_score, improvement, breakdown, improvements } = ats
 
   const gradeColor = grade === "A"
     ? "text-emerald-600 bg-emerald-50 border-emerald-200"
@@ -18,52 +18,93 @@ function ATSScore({ ats }) {
     : overall >= 55 ? "bg-yellow-500"
     : "bg-red-500"
 
-  const categories = [
-    { label: "Keywords", score: breakdown.keywords.score, weight: "40%" },
-    { label: "Sections", score: breakdown.sections.score, weight: "20%" },
-    { label: "Action Verbs", score: breakdown.action_verbs.score, weight: "20%" },
-    { label: "Format", score: breakdown.format.score, weight: "10%" },
-    { label: "Length", score: breakdown.length.score, weight: "10%" },
-  ]
+  const req = breakdown.required_skills
+  const pref = breakdown.preferred_skills
 
   return (
     <div className="bg-white border border-border rounded-2xl overflow-hidden">
       <div className="px-5 py-4 border-b border-border bg-gray-50 flex items-center justify-between">
         <span className="text-xs font-semibold text-subtle uppercase tracking-widest">ATS Score</span>
-        <div className={"text-sm font-black px-3 py-1 rounded-full border " + gradeColor}>
-          Grade {grade}
-        </div>
+        <div className={"text-sm font-black px-3 py-1 rounded-full border " + gradeColor}>Grade {grade}</div>
       </div>
 
-      <div className="p-5 space-y-4">
-        {/* Overall score */}
+      <div className="p-5 space-y-5">
+
+        {/* Before / After */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+            <p className="text-xs text-muted mb-1">Base CV Score</p>
+            <p className="text-2xl font-black text-gray-400">{base_score}/100</p>
+            <p className="text-xs text-muted mt-1">Before optimisation</p>
+          </div>
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-center">
+            <p className="text-xs text-muted mb-1">Optimised Score</p>
+            <p className="text-2xl font-black text-emerald-600">{overall}/100</p>
+            <p className="text-xs text-emerald-600 font-semibold mt-1">
+              {improvement > 0 ? "+" + improvement + " improvement" : "No change"}
+            </p>
+          </div>
+        </div>
+
+        {/* Overall bar */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-dark">Overall Score</span>
-            <span className="text-2xl font-black text-dark">{overall}/100</span>
+            <span className="text-sm font-semibold text-dark">Overall ATS Score</span>
+            <span className="text-xl font-black text-dark">{overall}/100</span>
           </div>
-          <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
             <div className={"h-full rounded-full transition-all duration-700 " + barColor}
               style={{ width: overall + "%" }} />
           </div>
         </div>
 
-        {/* Category breakdown */}
-        <div className="space-y-2">
-          {categories.map(({ label, score, weight }) => (
-            <div key={label} className="flex items-center gap-3">
-              <span className="text-xs text-subtle w-24">{label}</span>
-              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={"h-full rounded-full " + (score >= 70 ? "bg-emerald-400" : score >= 50 ? "bg-yellow-400" : "bg-red-400")}
-                  style={{ width: score + "%" }}
-                />
-              </div>
-              <span className="text-xs font-semibold text-dark w-8">{score}</span>
-              <span className="text-xs text-muted w-8">{weight}</span>
+        {/* Required skills */}
+        <div className="bg-white border border-border rounded-xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-subtle uppercase tracking-widest">Required Skills</p>
+            <span className="text-sm font-bold text-dark">{req.matched_count}/{req.total}</span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
+            <div className={"h-full rounded-full " + (req.score >= 70 ? "bg-emerald-500" : req.score >= 50 ? "bg-yellow-500" : "bg-red-500")}
+              style={{ width: req.score + "%" }} />
+          </div>
+          {req.matched.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {req.matched.map(s => (
+                <span key={s} className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg font-mono">✓ {s}</span>
+              ))}
             </div>
-          ))}
+          )}
+          {req.missing.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {req.missing.map(s => (
+                <span key={s} className="text-xs bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 rounded-lg font-mono">✗ {s}</span>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Preferred skills */}
+        {pref.total > 0 && (
+          <div className="bg-white border border-border rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold text-subtle uppercase tracking-widest">Preferred Skills</p>
+              <span className="text-sm font-bold text-dark">{pref.matched_count}/{pref.total}</span>
+            </div>
+            <div className="h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
+              <div className={"h-full rounded-full " + (pref.score >= 70 ? "bg-emerald-500" : pref.score >= 50 ? "bg-yellow-500" : "bg-red-500")}
+                style={{ width: pref.score + "%" }} />
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {pref.matched.map(s => (
+                <span key={s} className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg font-mono">✓ {s}</span>
+              ))}
+              {pref.missing.map(s => (
+                <span key={s} className="text-xs bg-gray-50 text-gray-500 border border-gray-200 px-2 py-0.5 rounded-lg font-mono">○ {s}</span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Improvements */}
         {improvements.length > 0 && (
@@ -72,24 +113,13 @@ function ATSScore({ ats }) {
             <ul className="space-y-1.5">
               {improvements.map((imp, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-amber-800">
-                  <span className="mt-0.5">→</span>{imp}
+                  <span className="mt-0.5 flex-shrink-0">→</span>{imp}
                 </li>
               ))}
             </ul>
           </div>
         )}
 
-        {/* Missing keywords */}
-        {breakdown.keywords.top_missing?.length > 0 && (
-          <div>
-            <p className="text-xs text-subtle mb-2">Missing JD keywords:</p>
-            <div className="flex flex-wrap gap-1.5">
-              {breakdown.keywords.top_missing.map(k => (
-                <span key={k} className="text-xs bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 rounded-lg font-mono">{k}</span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
@@ -117,18 +147,14 @@ export default function Step3Generate({ coverLetter, customCv, atsScore, form, s
       </div>
 
       <div className="flex gap-2 bg-gray-100 p-1 rounded-xl">
-        <button
-          onClick={() => setActiveTab("cover_letter")}
+        <button onClick={() => setActiveTab("cover_letter")}
           className={"flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all " +
-            (activeTab === "cover_letter" ? "bg-white text-dark shadow-sm" : "text-subtle hover:text-dark")}
-        >
+            (activeTab === "cover_letter" ? "bg-white text-dark shadow-sm" : "text-subtle hover:text-dark")}>
           Cover Letter
         </button>
-        <button
-          onClick={() => setActiveTab("cv")}
+        <button onClick={() => setActiveTab("cv")}
           className={"flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all " +
-            (activeTab === "cv" ? "bg-white text-dark shadow-sm" : "text-subtle hover:text-dark")}
-        >
+            (activeTab === "cv" ? "bg-white text-dark shadow-sm" : "text-subtle hover:text-dark")}>
           ATS CV
         </button>
       </div>

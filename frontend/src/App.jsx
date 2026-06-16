@@ -29,7 +29,6 @@ export default function App() {
             <span className="text-dark font-black text-lg tracking-tight">Cover<span className="text-accent">Craft</span></span>
             <p className="text-muted text-xs">AI-powered cover letters and CV optimisation</p>
           </div>
-          <span className="text-xs text-muted border border-border px-3 py-1 rounded-full">Powered by RAG + Llama 3.3</span>
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-6 py-10">
