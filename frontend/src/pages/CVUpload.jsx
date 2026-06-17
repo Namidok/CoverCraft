@@ -1,17 +1,62 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Upload, FileText, CheckCircle } from "lucide-react"
 import axios from "axios"
+import { supabase } from "../lib/supabase"
 
 export default function CVUpload() {
   const [file, setFile] = useState(null)
+  const [mode, setMode] = useState("file")
   const [text, setText] = useState("")
-  const [mode, setMode] = useState("paste")
   const [uploading, setUploading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState("")
+  const [checking, setChecking] = useState(true)
   const fileRef = useRef(null)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    checkCVUploaded()
+  }, [])
+
+  const checkCVUploaded = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("cv_uploaded")
+      .eq("id", session.user.id)
+      .single()
+
+    if (data?.cv_uploaded) {
+      navigate("/app")
+      return
+    }
+    setChecking(false)
+  }
+
+  const markCVUploaded = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("id")
+      .eq("id", session.user.id)
+      .single()
+
+    if (data) {
+      await supabase
+        .from("user_profiles")
+        .update({ cv_uploaded: true })
+        .eq("id", session.user.id)
+    } else {
+      await supabase
+        .from("user_profiles")
+        .insert({ id: session.user.id, cv_uploaded: true })
+    }
+  }
 
   const handleFileChange = (e) => {
     const f = e.target.files[0]
@@ -41,19 +86,32 @@ export default function CVUpload() {
         if (!text.trim()) { setError("Please paste your CV text."); setUploading(false); return }
         await axios.post("/api/upload-cv-text", { text })
       }
+      await markCVUploaded()
       setDone(true)
       setTimeout(() => navigate("/app"), 1500)
     } catch (err) {
-      setError(err.response?.data?.detail || "Upload failed. Is the backend running?")
+      setError(err.response?.data?.detail || "Upload failed. Please try again.")
     } finally {
       setUploading(false)
     }
   }
 
+  if (checking) return (
+    <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-surface flex flex-col">
-      <nav className="border-b border-border bg-white px-6 py-4">
+      <nav className="border-b border-border bg-white px-6 py-4 flex items-center justify-between">
         <span className="text-dark font-black text-lg">Cover<span className="text-accent">Craft</span></span>
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="text-xs text-subtle hover:text-dark transition-colors"
+        >
+          Sign out
+        </button>
       </nav>
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-lg">
@@ -105,7 +163,7 @@ export default function CVUpload() {
               </div>
             ) : (
               <div className="space-y-2">
-                <p className="text-xs text-muted">Paste your CV as plain text — copy from your PDF or Word doc</p>
+                <p className="text-xs text-muted">Paste your CV as plain text</p>
                 <textarea
                   value={text}
                   onChange={e => setText(e.target.value)}
@@ -133,12 +191,6 @@ export default function CVUpload() {
               </button>
             )}
           </div>
-          <p className="text-center text-muted text-xs mt-4">
-            Already uploaded before?{" "}
-            <button onClick={() => navigate("/app")} className="text-accent hover:underline">
-              Skip to app →
-            </button>
-          </p>
         </div>
       </div>
     </div>

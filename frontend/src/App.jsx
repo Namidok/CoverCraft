@@ -4,6 +4,7 @@ import { supabase } from "./lib/supabase"
 import Landing from "./pages/Landing"
 import Auth from "./components/Auth"
 import CVUpload from "./pages/CVUpload"
+import Profile from "./pages/Profile"
 import StepIndicator from "./components/StepIndicator"
 import Step1JobDetails from "./steps/Step1JobDetails"
 import Step2SkillGap from "./steps/Step2SkillGap"
@@ -35,14 +36,10 @@ function AppFlow() {
             <span className="text-dark font-black text-lg tracking-tight">Cover<span className="text-accent">Craft</span></span>
             <p className="text-muted text-xs">AI-powered cover letters and CV optimisation</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            <a href="/profile" className="text-xs text-subtle hover:text-dark transition-colors">Profile</a>
             <span className="text-xs text-muted border border-border px-3 py-1 rounded-full">Powered by RAG + Llama 3.3</span>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="text-xs text-subtle hover:text-dark transition-colors"
-            >
-              Sign out
-            </button>
+            <button onClick={() => supabase.auth.signOut()} className="text-xs text-subtle hover:text-dark transition-colors">Sign out</button>
           </div>
         </div>
       </header>
@@ -88,6 +85,7 @@ export default function App() {
         <Route path="/login" element={user ? <Navigate to="/upload-cv" /> : <Auth />} />
         <Route path="/upload-cv" element={user ? <CVUpload /> : <Navigate to="/login" />} />
         <Route path="/app" element={user ? <AppFlow /> : <Navigate to="/login" />} />
+        <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" />} />
         <Route path="/*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
