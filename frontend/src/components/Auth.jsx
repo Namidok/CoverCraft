@@ -5,7 +5,7 @@ export default function Auth() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: "http://covercraft.srikarkodi.dev/upload-cv"
+        redirectTo: window.location.origin + "/upload-cv"
       }
     })
   }
