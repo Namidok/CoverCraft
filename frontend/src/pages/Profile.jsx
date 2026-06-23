@@ -70,8 +70,10 @@ export default function Profile() {
     try {
       const formData = new FormData()
       formData.append("file", f)
+      const { data: { session } } = await supabase.auth.getSession()
+      const authHeader = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
       await axios.post("/api/upload-cv-pdf", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
+        headers: { ...authHeader, "Content-Type": "multipart/form-data" }
       })
       await supabase.from("user_profiles").upsert({
         id: profile.id,

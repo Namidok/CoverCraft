@@ -1,6 +1,6 @@
 """
 Cover Letter Generator — RAG + Groq LLM
-Generates tailored cover letters using the user's uploaded CV as context.
+Uses user's uploaded CV as context.
 """
 import os
 import re
@@ -19,9 +19,9 @@ def clean_context(text: str) -> str:
     return text[:3000]
 
 
-def generate_cover_letter(company: str, role: str, jd_text: str) -> str:
-    cv_chunks = get_cv_context(f"experience skills relevant to {role} at {company}", n=5)
-    jd_chunks = get_jd_context(company, "requirements skills responsibilities", n=4)
+def generate_cover_letter(company: str, role: str, jd_text: str, user_id: str = "default") -> str:
+    cv_chunks = get_cv_context(f"experience skills relevant to {role} at {company}", n=5, user_id=user_id)
+    jd_chunks = get_jd_context(company, "requirements skills responsibilities", n=4, user_id=user_id)
 
     cv_context = clean_context("\n".join(cv_chunks)) if cv_chunks else ""
     jd_context = clean_context("\n".join(jd_chunks)) if jd_chunks else jd_text[:1500]
@@ -41,8 +41,8 @@ COMPANY: {company}
 ROLE: {role}
 
 Write a tailored, professional cover letter that:
-1. Opens with a strong hook specific to {company} and why the candidate is excited about this role
-2. Highlights 2-3 most relevant experiences with specific metrics from their CV
+1. Opens with a strong hook specific to {company} and this role
+2. Highlights 2-3 most relevant experiences with specific metrics from the CV
 3. Connects their skills directly to what {company} is looking for
 4. Closes with a confident call to action
 
@@ -50,11 +50,10 @@ RULES:
 - Maximum 4 paragraphs
 - No generic phrases like "I am writing to apply"
 - Use specific numbers and achievements from the CV
-- ATS-friendly language — use keywords from the JD naturally
+- ATS-friendly — use keywords from the JD naturally
 - Professional but not robotic
-- Do NOT include address headers or date — just the body paragraphs
-- Write in first person as the candidate
-- Do NOT include placeholder text like [Your Name] or [Date]
+- Do NOT include address headers, date, or placeholders like [Your Name]
+- Write in first person
 - Output only the cover letter body. Nothing else."""
 
     response = client.chat.completions.create(

@@ -1,6 +1,5 @@
 """
-ATS-Friendly CV Generator — rewrites user's CV to match JD keywords.
-Uses uploaded CV from ChromaDB as the base.
+ATS-Friendly CV Generator — uses user's uploaded CV from ChromaDB.
 """
 import os
 import re
@@ -20,9 +19,9 @@ def clean_context(text: str) -> str:
     return text[:4000]
 
 
-def generate_custom_cv(company: str, role: str, jd_text: str) -> str:
-    cv_chunks = get_cv_context("experience education skills projects", n=8)
-    jd_chunks = get_jd_context(company, "requirements skills responsibilities", n=5)
+def generate_custom_cv(company: str, role: str, jd_text: str, user_id: str = "default") -> str:
+    cv_chunks = get_cv_context("experience education skills projects", n=8, user_id=user_id)
+    jd_chunks = get_jd_context(company, "requirements skills responsibilities", n=5, user_id=user_id)
 
     cv_context = clean_context("\n".join(cv_chunks)) if cv_chunks else ""
     jd_context = clean_context("\n".join(jd_chunks)) if jd_chunks else jd_text[:1500]
@@ -33,7 +32,7 @@ def generate_custom_cv(company: str, role: str, jd_text: str) -> str:
 
     prompt = f"""You are an expert ATS optimization specialist. Rewrite the candidate's CV to be perfectly tailored for this specific role.
 
-CANDIDATE CV CONTENT (extracted from their uploaded CV):
+CANDIDATE CV CONTENT:
 {cv_context}
 
 JOB DESCRIPTION CONTEXT:
@@ -51,20 +50,18 @@ Rewrite the CV following these rules:
 3. SKILLS — Reorder skills to prioritise ones mentioned in the JD
 4. EXPERIENCE — Rewrite ALL bullet points in strict Google XYZ format:
    "Accomplished [X] as measured by [Y] by doing [Z]"
-   - Inject relevant JD keywords naturally into bullets
+   - Inject relevant JD keywords naturally
    - Keep all real metrics from the original CV
    - Every bullet must start with a strong action verb
 5. PROJECTS — Reorder to put most relevant project first
 6. EDUCATION — Keep exactly as is
 
 ATS RULES:
-- Use standard section headers: SUMMARY, EXPERIENCE, EDUCATION, SKILLS, PROJECTS
+- Standard section headers: SUMMARY, EXPERIENCE, EDUCATION, SKILLS, PROJECTS
 - No tables, no columns, no special characters except bullets (-)
 - NEVER spell out numbers — always use digits and % symbol
-- NEVER expand common tech abbreviations
-- NEVER add skills the candidate does not have in their CV
+- NEVER add skills the candidate does not have
 - Plain text format only
-- Keep bullet points concise — max 2 lines each
 
 Output the complete rewritten CV. Nothing else."""
 

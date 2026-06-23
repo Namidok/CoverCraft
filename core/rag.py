@@ -1,3 +1,6 @@
+"""
+RAG Pipeline — ChromaDB with per-user collections
+"""
 import os
 import re
 import chromadb
@@ -19,9 +22,8 @@ def sanitize_name(name: str) -> str:
     clean = re.sub(r'-+', '-', clean)
     clean = clean.strip('-')
     if len(clean) < 3:
-        clean = clean + "job"
-    clean = clean[:40].rstrip('-')
-    return clean
+        clean = clean + "col"
+    return clean[:40].rstrip('-')
 
 
 def get_or_create_collection(name: str):
@@ -50,6 +52,8 @@ def add_document(collection_name: str, text: str, metadata: dict = None):
     collection = get_or_create_collection(collection_name)
     text = clean_text(text)
     chunks = splitter.split_text(text)
+    if not chunks:
+        return 0
 
     existing = collection.get()
     if existing["ids"]:
@@ -58,11 +62,7 @@ def add_document(collection_name: str, text: str, metadata: dict = None):
     ids = [f"{sanitize_name(collection_name)}_{i}" for i in range(len(chunks))]
     metadatas = [metadata or {} for _ in chunks]
 
-    collection.add(
-        ids=ids,
-        documents=chunks,
-        metadatas=metadatas,
-    )
+    collection.add(ids=ids, documents=chunks, metadatas=metadatas)
     return len(chunks)
 
 
@@ -77,22 +77,27 @@ def query_collection(collection_name: str, query: str, n_results: int = 5):
     return results["documents"][0] if results["documents"] else []
 
 
-def add_cv(text: str):
-    return add_document("user-cv", text, {"type": "cv"})
+def add_cv(text: str, user_id: str = "default"):
+    collection_name = f"cv-{user_id[:20]}" if user_id != "default" else "user-cv"
+    return add_document(collection_name, text, {"type": "cv", "user_id": user_id})
 
 
-def add_jd(text: str, company: str, role: str):
+def add_jd(text: str, company: str, role: str, user_id: str = "default"):
+    prefix = user_id[:10] if user_id != "default" else "usr"
+    collection_name = f"jd-{prefix}-{company.lower().replace(' ', '-')[:20]}"
     return add_document(
-        f"jd-{company.lower().replace(' ', '-')[:40]}",
+        collection_name,
         text,
-        {"type": "jd", "company": company, "role": role},
+        {"type": "jd", "company": company, "role": role, "user_id": user_id},
     )
 
 
-def get_cv_context(query: str, n: int = 5):
-    return query_collection("user-cv", query, n)
+def get_cv_context(query: str, n: int = 5, user_id: str = "default"):
+    collection_name = f"cv-{user_id[:20]}" if user_id != "default" else "user-cv"
+    return query_collection(collection_name, query, n)
 
 
-def get_jd_context(company: str, query: str, n: int = 5):
-    collection_name = f"jd-{company.lower().replace(' ', '-')[:40]}"
+def get_jd_context(company: str, query: str, n: int = 5, user_id: str = "default"):
+    prefix = user_id[:10] if user_id != "default" else "usr"
+    collection_name = f"jd-{prefix}-{company.lower().replace(' ', '-')[:20]}"
     return query_collection(collection_name, query, n)
