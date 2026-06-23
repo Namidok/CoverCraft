@@ -78,7 +78,7 @@ def query_collection(collection_name: str, query: str, n_results: int = 5):
 
 
 def add_cv(text: str):
-    return add_document("srikar-cv", text, {"type": "cv"})
+    return add_document("user-cv", text, {"type": "cv"})
 
 
 def add_jd(text: str, company: str, role: str):
@@ -90,7 +90,7 @@ def add_jd(text: str, company: str, role: str):
 
 
 def get_cv_context(query: str, n: int = 5):
-    return query_collection("srikar-cv", query, n)
+    return query_collection("user-cv", query, n)
 
 
 def get_jd_context(company: str, query: str, n: int = 5):

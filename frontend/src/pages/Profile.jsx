@@ -153,7 +153,7 @@ export default function Profile() {
             <label className="text-xs text-muted uppercase tracking-widest">Target Location</label>
             {editing
               ? <input type="text" value={form.target_location || ""} onChange={e => setForm(p => ({ ...p, target_location: e.target.value }))}
-                  placeholder="e.g. Berlin, Munich" className="w-full border border-border rounded-lg px-3 py-2.5 text-sm text-dark focus:outline-none focus:border-accent" />
+                  placeholder="e.g. London, Remote" className="w-full border border-border rounded-lg px-3 py-2.5 text-sm text-dark focus:outline-none focus:border-accent" />
               : <p className="text-dark text-sm">{profile?.target_location || "—"}</p>
             }
           </div>

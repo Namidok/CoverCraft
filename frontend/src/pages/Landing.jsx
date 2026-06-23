@@ -15,9 +15,6 @@ export default function Landing() {
         </button>
       </nav>
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center py-20">
-        <div className="inline-flex items-center gap-2 bg-accent/10 text-accent text-xs font-semibold px-4 py-1.5 rounded-full mb-6 border border-accent/20">
-          ⚡ Powered by RAG + Llama 3.3
-        </div>
         <h1 className="text-5xl md:text-7xl font-black text-dark leading-tight mb-6">
           Land the job with<br /><span className="text-accent">AI-tailored</span> documents
         </h1>
@@ -54,7 +51,7 @@ export default function Landing() {
         </div>
       </div>
       <footer className="text-center py-6 text-muted text-xs border-t border-border">
-        CoverCraft · Built by Srikar Kodi · 2026
+        CoverCraft · 2026
       </footer>
     </div>
   )

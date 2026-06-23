@@ -34,11 +34,9 @@ function AppFlow() {
         <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <span className="text-dark font-black text-lg tracking-tight">Cover<span className="text-accent">Craft</span></span>
-            <p className="text-muted text-xs">AI-powered cover letters and CV optimisation</p>
           </div>
           <div className="flex items-center gap-4">
             <a href="/profile" className="text-xs text-subtle hover:text-dark transition-colors">Profile</a>
-            <span className="text-xs text-muted border border-border px-3 py-1 rounded-full">Powered by RAG + Llama 3.3</span>
             <button onClick={() => supabase.auth.signOut()} className="text-xs text-subtle hover:text-dark transition-colors">Sign out</button>
           </div>
         </div>
@@ -52,7 +50,7 @@ function AppFlow() {
           {step === 4 && <Step4Download form={form} downloadPdf={downloadPdf} reset={reset} error={error} />}
         </div>
       </main>
-      <footer className="text-center py-8 text-muted text-xs">CoverCraft · Built by Srikar Kodi · 2026</footer>
+      <footer className="text-center py-8 text-muted text-xs">CoverCraft · 2026</footer>
     </div>
   )
 }
