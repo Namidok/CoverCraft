@@ -47,17 +47,28 @@ Rewrite the CV following these rules:
 
 1. HEADER — Keep the candidate's name and contact details exactly as they appear in their CV
 2. SUMMARY — Add a 2-line professional summary targeting this specific role at {company}
-3. SKILLS — Reorder skills to prioritise ones mentioned in the JD
-4. EXPERIENCE — Rewrite ALL bullet points in strict Google XYZ format:
-   "Accomplished [X] as measured by [Y] by doing [Z]"
-   - Inject relevant JD keywords naturally
-   - Keep all real metrics from the original CV
-   - Every bullet must start with a strong action verb
-5. PROJECTS — Reorder to put most relevant project first
-6. EDUCATION — Keep exactly as is
+3. SKILLS — Reorder skills to prioritise ones mentioned in the JD. Group by category if possible (e.g., "Languages & Frameworks: Python, FastAPI...")
+4. EXPERIENCE — Format each entry STRICTLY like this:
+   Job Title | Month Year – Month Year
+   Company, Location
+   • Bullet point in Google XYZ format: "Accomplished [X] as measured by [Y] by doing [Z]"
+   • Inject relevant JD keywords naturally
+   • Keep all real metrics from the original CV
+   • Every bullet must start with a strong action verb
+5. PROJECTS — Format each entry STRICTLY like this:
+   Project Name | Year – Year
+   Description / Link
+   • Bullet point...
+6. EDUCATION — Format each entry STRICTLY like this:
+   Degree Name | Start Year – End Year
+   Institution, Location
+   • Relevant coursework bullet (optional)
 
-ATS RULES:
-- Standard section headers: SUMMARY, EXPERIENCE, EDUCATION, SKILLS, PROJECTS
+CRITICAL FORMATTING RULES:
+- Standard section headers in ALL CAPS: SUMMARY, EXPERIENCE, PROJECTS, EDUCATION, SKILLS
+- Job title and dates MUST be on the SAME line separated by " | "
+- Company/institution MUST be on the line immediately after the title+dates line
+- NEVER put dates on separate lines from the job title
 - No tables, no columns, no special characters except bullets (-)
 - NEVER spell out numbers — always use digits and % symbol
 - NEVER add skills the candidate does not have

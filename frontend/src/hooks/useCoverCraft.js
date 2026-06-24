@@ -1,5 +1,6 @@
 import { useState } from "react"
 import axios from "axios"
+import { supabase } from "../lib/supabase"
 
 export default function useCoverCraft() {
   const [step, setStep] = useState(1)
@@ -11,6 +12,12 @@ export default function useCoverCraft() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
   const analyseGap = async () => {
     if (!form.company || !form.role || !form.jd_text) {
       setError("Please fill in all fields.")
@@ -19,7 +26,8 @@ export default function useCoverCraft() {
     setLoading(true)
     setError("")
     try {
-      const res = await axios.post("/api/add-jd", form)
+      const headers = await getAuthHeader()
+      const res = await axios.post("/api/add-jd", form, { headers })
       setSkillGap(res.data.skill_gap)
       setStep(2)
     } catch {
@@ -33,7 +41,8 @@ export default function useCoverCraft() {
     setLoading(true)
     setError("")
     try {
-      const res = await axios.post("/api/generate-all", form)
+      const headers = await getAuthHeader()
+      const res = await axios.post("/api/generate-all", form, { headers })
       setCoverLetter(res.data.cover_letter)
       setCustomCv(res.data.cv)
       setAtsScore(res.data.ats_score)
@@ -50,7 +59,8 @@ export default function useCoverCraft() {
       const endpoint = type === "cover_letter"
         ? "/api/download-cover-letter-pdf"
         : "/api/download-cv-pdf"
-      const res = await axios.post(endpoint, form, { responseType: "blob" })
+      const headers = await getAuthHeader()
+      const res = await axios.post(endpoint, form, { headers, responseType: "blob" })
       const url = window.URL.createObjectURL(new Blob([res.data]))
       const link = document.createElement("a")
       link.href = url

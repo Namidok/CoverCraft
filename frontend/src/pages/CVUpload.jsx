@@ -75,16 +75,19 @@ export default function CVUpload() {
     setUploading(true)
     setError("")
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const authHeader = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+
       if (mode === "file") {
         if (!file) { setError("Please select a file."); setUploading(false); return }
         const formData = new FormData()
         formData.append("file", file)
         await axios.post("/api/upload-cv-pdf", formData, {
-          headers: { "Content-Type": "multipart/form-data" }
+          headers: { ...authHeader, "Content-Type": "multipart/form-data" }
         })
       } else {
         if (!text.trim()) { setError("Please paste your CV text."); setUploading(false); return }
-        await axios.post("/api/upload-cv-text", { text })
+        await axios.post("/api/upload-cv-text", { text }, { headers: authHeader })
       }
       await markCVUploaded()
       setDone(true)
