@@ -19,7 +19,7 @@ def clean_context(text: str) -> str:
     return text[:3000]
 
 
-def generate_cover_letter(company: str, role: str, jd_text: str, user_id: str = "default") -> str:
+def generate_cover_letter(company: str, role: str, jd_text: str, user_id: str = "default", lang: str = "en") -> str:
     cv_chunks = get_cv_context(f"experience skills relevant to {role} at {company}", n=5, user_id=user_id)
     jd_chunks = get_jd_context(company, "requirements skills responsibilities", n=4, user_id=user_id)
 
@@ -28,6 +28,8 @@ def generate_cover_letter(company: str, role: str, jd_text: str, user_id: str = 
 
     if not cv_context:
         return "Please upload your CV first before generating a cover letter."
+
+    lang_instruction = "Write the ENTIRE cover letter in German (Deutsch). Use formal Sie form and professional German business language." if lang == "de" else "Write in English."
 
     prompt = f"""You are an expert career coach writing a tailored cover letter.
 
@@ -54,7 +56,8 @@ RULES:
 - Professional but not robotic
 - Do NOT include address headers, date, or placeholders like [Your Name]
 - Write in first person
-- Output only the cover letter body. Nothing else."""
+- Output only the cover letter body. Nothing else.
+- LANGUAGE: {lang_instruction}"""
 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",

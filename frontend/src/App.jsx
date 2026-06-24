@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import { Toaster } from "react-hot-toast"
 import { useState, useEffect } from "react"
+import useTheme from "./hooks/useTheme"
+import { useLang } from "./hooks/useLang.jsx"
 import { supabase } from "./lib/supabase"
 import Landing from "./pages/Landing"
 import Auth from "./components/Auth"
@@ -13,6 +16,8 @@ import Step4Download from "./steps/Step4Download"
 import useCoverCraft from "./hooks/useCoverCraft"
 
 function AppFlow() {
+  const { dark, toggle } = useTheme()
+  const { lang, toggle: toggleLang } = useLang()
   const {
     step, setStep,
     form, setForm,
@@ -25,10 +30,13 @@ function AppFlow() {
     analyseGap,
     generate,
     downloadPdf,
+    downloadPdfDE,
     reset,
   } = useCoverCraft()
 
   return (
+    <>
+    <Toaster position="bottom-right" toastOptions={{ style: { background: "#1a1d27", color: "#fff", border: "1px solid #2d3748", fontSize: "14px" }, success: { iconTheme: { primary: "#10B981", secondary: "#fff" } }, error: { iconTheme: { primary: "#ef4444", secondary: "#fff" } } }} />
     <div className="min-h-screen bg-surface">
       <header className="border-b border-border bg-white sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -37,6 +45,12 @@ function AppFlow() {
           </div>
           <div className="flex items-center gap-4">
             <a href="/profile" className="text-xs text-subtle hover:text-dark transition-colors">Profile</a>
+            <button onClick={toggleLang} className="text-xs border border-border text-subtle hover:text-dark px-3 py-1 rounded-lg transition-colors font-semibold">
+              {lang === "en" ? "DE" : "EN"}
+            </button>
+            <button onClick={toggle} className="text-xs border border-border text-subtle hover:text-dark px-3 py-1 rounded-lg transition-colors">
+              {dark ? "☀️" : "🌙"}
+            </button>
             <button onClick={() => supabase.auth.signOut()} className="text-xs text-subtle hover:text-dark transition-colors">Sign out</button>
           </div>
         </div>
@@ -47,11 +61,12 @@ function AppFlow() {
           {step === 1 && <Step1JobDetails form={form} setForm={setForm} analyseGap={analyseGap} loading={loading} error={error} />}
           {step === 2 && <Step2SkillGap skillGap={skillGap} form={form} generate={generate} loading={loading} error={error} setStep={setStep} />}
           {step === 3 && <Step3Generate coverLetter={coverLetter} customCv={customCv} atsScore={atsScore} form={form} setStep={setStep} downloadPdf={downloadPdf} error={error} />}
-          {step === 4 && <Step4Download form={form} downloadPdf={downloadPdf} reset={reset} error={error} />}
+          {step === 4 && <Step4Download form={form} downloadPdf={downloadPdf} downloadPdfDE={downloadPdfDE} reset={reset} error={error} />}
         </div>
       </main>
       <footer className="text-center py-8 text-muted text-xs">CoverCraft · 2026</footer>
     </div>
+    </>
   )
 }
 

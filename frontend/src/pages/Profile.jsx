@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "../lib/supabase"
-import { CheckCircle, Upload, FileText } from "lucide-react"
+import { CheckCircle, Upload, Building2 } from "lucide-react"
 import axios from "axios"
 
 export default function Profile() {
@@ -14,7 +14,8 @@ export default function Profile() {
   const [cvFile, setCvFile] = useState(null)
   const [uploadingCv, setUploadingCv] = useState(false)
   const [cvSuccess, setCvSuccess] = useState(false)
-  const fileRef = useState(null)
+  const [documents, setDocuments] = useState([])
+  const [selectedDoc, setSelectedDoc] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => { fetchProfile() }, [])
@@ -30,6 +31,12 @@ export default function Profile() {
       .eq("id", user.id)
       .single()
 
+    const { data: docs } = await supabase
+      .from("documents")
+      .select("id, company, role, ats_score, created_at, jd_text")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+
     const profileData = {
       id: user.id,
       full_name: user.user_metadata?.full_name || "",
@@ -43,6 +50,7 @@ export default function Profile() {
 
     setProfile(profileData)
     setForm(profileData)
+    setDocuments(docs || [])
     setLoading(false)
   }
 
@@ -68,10 +76,10 @@ export default function Profile() {
     setCvFile(f)
     setUploadingCv(true)
     try {
-      const formData = new FormData()
-      formData.append("file", f)
       const { data: { session } } = await supabase.auth.getSession()
       const authHeader = session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+      const formData = new FormData()
+      formData.append("file", f)
       await axios.post("/api/upload-cv-pdf", formData, {
         headers: { ...authHeader, "Content-Type": "multipart/form-data" }
       })
@@ -87,6 +95,66 @@ export default function Profile() {
       setUploadingCv(false)
     }
   }
+
+  const JobPopup = ({ doc, onClose }) => (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-dark font-bold text-lg">{doc.company}</h3>
+            <p className="text-subtle text-sm">{doc.role}</p>
+          </div>
+          <button onClick={onClose} className="text-muted hover:text-dark text-xl leading-none">×</button>
+        </div>
+
+        <div className="space-y-3">
+          {doc.ats_score?.overall != null && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted uppercase tracking-widest">ATS Score</span>
+              <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${
+                doc.ats_score.overall >= 70 ? "bg-green-50 text-green-700 border border-green-200"
+                : doc.ats_score.overall >= 40 ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                : "bg-red-50 text-red-700 border border-red-200"
+              }`}>{doc.ats_score.overall}%</span>
+            </div>
+          )}
+
+          {doc.ats_score?.breakdown?.required_skills?.matched?.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted uppercase tracking-widest">Matched Skills</p>
+              <div className="flex flex-wrap gap-1.5">
+                {doc.ats_score.breakdown.required_skills.matched.map(s => (
+                  <span key={s} className="text-xs bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded-full">{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {doc.ats_score?.breakdown?.required_skills?.missing?.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted uppercase tracking-widest">Missing Skills</p>
+              <div className="flex flex-wrap gap-1.5">
+                {doc.ats_score.breakdown.required_skills.missing.map(s => (
+                  <span key={s} className="text-xs bg-red-50 text-red-600 border border-red-200 px-2 py-0.5 rounded-full">{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {doc.jd_text && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted uppercase tracking-widest">Job Description Preview</p>
+              <p className="text-subtle text-sm leading-relaxed bg-gray-50 rounded-xl p-3 line-clamp-5">
+                {doc.jd_text.slice(0, 400)}...
+              </p>
+            </div>
+          )}
+
+          <p className="text-xs text-muted">Applied: {new Date(doc.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+        </div>
+      </div>
+    </div>
+  )
 
   if (loading) return (
     <div className="min-h-screen bg-surface flex items-center justify-center">
@@ -104,15 +172,14 @@ export default function Profile() {
         </div>
       </nav>
 
-      <div className="max-w-xl mx-auto w-full px-6 py-10 space-y-6">
+      {selectedDoc && <JobPopup doc={selectedDoc} onClose={() => setSelectedDoc(null)} />}
+      <div className="max-w-2xl mx-auto w-full px-6 py-10 space-y-6">
 
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-dark">Profile</h1>
           {!editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className="bg-accent hover:bg-accent-hover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-            >
+            <button onClick={() => setEditing(true)}
+              className="bg-accent hover:bg-accent-hover text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
               Edit Profile
             </button>
           )}
@@ -124,7 +191,7 @@ export default function Profile() {
           </div>
         )}
 
-        {/* Avatar + basic info */}
+        {/* Avatar */}
         <div className="bg-white border border-border rounded-2xl p-6 flex items-center gap-5 shadow-sm">
           {profile?.avatar_url
             ? <img src={profile.avatar_url} alt="avatar" className="w-16 h-16 rounded-full" />
@@ -138,10 +205,9 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Job search details */}
+        {/* Job Search */}
         <div className="bg-white border border-border rounded-2xl p-6 shadow-sm space-y-5">
           <p className="text-xs text-muted uppercase tracking-widest font-semibold">Job Search</p>
-
           <div className="space-y-1.5">
             <label className="text-xs text-muted uppercase tracking-widest">Target Role</label>
             {editing
@@ -150,7 +216,6 @@ export default function Profile() {
               : <p className="text-dark text-sm">{profile?.target_role || "—"}</p>
             }
           </div>
-
           <div className="space-y-1.5">
             <label className="text-xs text-muted uppercase tracking-widest">Target Location</label>
             {editing
@@ -159,7 +224,6 @@ export default function Profile() {
               : <p className="text-dark text-sm">{profile?.target_location || "—"}</p>
             }
           </div>
-
           <div className="space-y-1.5">
             <label className="text-xs text-muted uppercase tracking-widest">Available From</label>
             {editing
@@ -170,7 +234,7 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* CV section */}
+        {/* CV */}
         <div className="bg-white border border-border rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted uppercase tracking-widest font-semibold">Your CV</p>
@@ -178,14 +242,12 @@ export default function Profile() {
               <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full">Uploaded</span>
             )}
           </div>
-          <p className="text-subtle text-sm">Upload a new CV to replace the existing one used for generation.</p>
-
+          <p className="text-subtle text-sm">Upload a new CV to replace the existing one.</p>
           {cvSuccess && (
             <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
               <CheckCircle size={16} /> CV updated successfully
             </div>
           )}
-
           <label className="flex items-center justify-center gap-3 border-2 border-dashed border-border hover:border-accent rounded-xl p-5 cursor-pointer transition-colors group">
             <input type="file" accept=".pdf" onChange={handleCvUpload} className="hidden" />
             {uploadingCv
@@ -210,6 +272,80 @@ export default function Profile() {
             </button>
           </div>
         )}
+
+        {/* Applied Companies */}
+        <div className="bg-white border border-border rounded-2xl p-6 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted uppercase tracking-widest font-semibold">Applied Companies</p>
+            <span className="text-xs bg-accent/10 text-accent border border-accent/20 px-2 py-0.5 rounded-full font-semibold">
+              {documents.length} total
+            </span>
+          </div>
+
+          {documents.length === 0 ? (
+            <div className="text-center py-8 space-y-2">
+              <Building2 size={32} className="text-muted mx-auto" />
+              <p className="text-subtle text-sm">No applications yet.</p>
+              <p className="text-muted text-xs">Generate your first cover letter to see it here.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left text-xs text-muted uppercase tracking-widest py-2 pr-4">Company</th>
+                    <th className="text-left text-xs text-muted uppercase tracking-widest py-2 pr-4">Role</th>
+                    <th className="text-left text-xs text-muted uppercase tracking-widest py-2 pr-4">Skills Matched</th>
+                    <th className="text-left text-xs text-muted uppercase tracking-widest py-2 pr-4">ATS</th>
+                    <th className="text-left text-xs text-muted uppercase tracking-widest py-2">Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {documents.map((doc) => (
+                    <tr key={doc.id} onClick={() => setSelectedDoc(doc)} className="hover:bg-gray-50 transition-colors cursor-pointer">
+                      <td className="py-3 pr-4">
+                        <p className="text-dark font-semibold">{doc.company}</p>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <p className="text-subtle">{doc.role}</p>
+                      </td>
+                      <td className="py-3 pr-4">
+                        <div className="flex flex-wrap gap-1">
+                          {(doc.ats_score?.breakdown?.required_skills?.matched || []).slice(0,4).map(s => (
+                            <span key={s} className="text-xs bg-accent/10 text-accent border border-accent/20 px-1.5 py-0.5 rounded-full">{s}</span>
+                          ))}
+                          {(doc.ats_score?.breakdown?.required_skills?.matched || []).length > 4 && (
+                            <span className="text-xs text-muted">+{doc.ats_score.breakdown.required_skills.matched.length - 4}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4">
+                        {doc.ats_score?.overall != null ? (
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                            doc.ats_score.overall >= 70
+                              ? "bg-green-50 text-green-700 border border-green-200"
+                              : doc.ats_score.overall >= 40
+                              ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                              : "bg-red-50 text-red-700 border border-red-200"
+                          }`}>
+                            {doc.ats_score.overall}%
+                          </span>
+                        ) : <span className="text-muted text-xs">—</span>}
+                      </td>
+                      <td className="py-3">
+                        <p className="text-muted text-xs">
+                          {new Date(doc.created_at).toLocaleDateString("en-GB", {
+                            day: "numeric", month: "short", year: "numeric"
+                          })}
+                        </p>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
       </div>
     </div>

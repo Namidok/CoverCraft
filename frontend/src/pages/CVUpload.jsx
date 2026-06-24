@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { Upload, FileText, CheckCircle } from "lucide-react"
 import axios from "axios"
 import { supabase } from "../lib/supabase"
+import toast from "react-hot-toast"
 
 export default function CVUpload() {
   const [file, setFile] = useState(null)
@@ -91,9 +92,11 @@ export default function CVUpload() {
       }
       await markCVUploaded()
       setDone(true)
+      toast.success("CV uploaded successfully!")
       setTimeout(() => navigate("/app"), 1500)
     } catch (err) {
       setError(err.response?.data?.detail || "Upload failed. Please try again.")
+      toast.error("Upload failed")
     } finally {
       setUploading(false)
     }

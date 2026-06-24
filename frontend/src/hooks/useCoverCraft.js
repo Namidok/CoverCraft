@@ -1,4 +1,5 @@
 import { useState } from "react"
+import toast from "react-hot-toast"
 import axios from "axios"
 import { supabase } from "../lib/supabase"
 
@@ -30,8 +31,10 @@ export default function useCoverCraft() {
       const res = await axios.post("/api/add-jd", form, { headers })
       setSkillGap(res.data.skill_gap)
       setStep(2)
+      toast.success("JD analysed successfully")
     } catch {
       setError("Failed to analyse JD. Is the backend running?")
+      toast.error("Failed to analyse JD")
     } finally {
       setLoading(false)
     }
@@ -47,10 +50,35 @@ export default function useCoverCraft() {
       setCustomCv(res.data.cv)
       setAtsScore(res.data.ats_score)
       setStep(3)
+      toast.success("Documents generated!")
     } catch {
       setError("Generation failed. Please try again.")
+      toast.error("Generation failed")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const downloadPdfDE = async (type) => {
+    try {
+      const headers = await getAuthHeader()
+      const endpoint = type === "cover_letter"
+        ? "/api/download-cover-letter-pdf-de"
+        : "/api/download-cv-pdf-de"
+      const res = await axios.post(endpoint, form, { headers, responseType: "blob" })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement("a")
+      link.href = url
+      link.setAttribute("download", type === "cover_letter"
+        ? `cover_letter_${form.company}_DE.pdf`
+        : `cv_${form.company}_DE.pdf`
+      )
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      toast.success("German PDF downloaded!")
+    } catch {
+      toast.error("German download failed")
     }
   }
 
@@ -73,6 +101,7 @@ export default function useCoverCraft() {
       link.remove()
     } catch {
       setError("Download failed. Please try again.")
+      toast.error("Download failed")
     }
   }
 
@@ -98,6 +127,7 @@ export default function useCoverCraft() {
     analyseGap,
     generate,
     downloadPdf,
+    downloadPdfDE,
     reset,
   }
 }

@@ -98,7 +98,7 @@ def save_user_cv(user_id: str, cv_text: str, filename: str = ""):
         }).execute()
 
 
-def save_document(user_id: str, company: str, role: str, cover_letter: str, cv_text: str, ats_score: dict):
+def save_document(user_id: str, company: str, role: str, cover_letter: str, cv_text: str, ats_score: dict, jd_text: str = ""):
     """Save generated documents to Supabase."""
     try:
         client = get_supabase()
@@ -109,6 +109,7 @@ def save_document(user_id: str, company: str, role: str, cover_letter: str, cv_t
             "cover_letter": cover_letter,
             "cv_text": cv_text,
             "ats_score": ats_score,
+            "jd_text": jd_text,
         }).execute()
     except Exception as e:
         print(f"Failed to save document: {e}")
@@ -225,7 +226,7 @@ async def generate_all(
     ats = calculate_ats_score(custom_cv, request.jd_text, jd_parsed)
 
     # Save to Supabase
-    save_document(user_id, request.company, request.role, cover_letter, custom_cv, ats)
+    save_document(user_id, request.company, request.role, cover_letter, custom_cv, ats, request.jd_text)
 
     return {
         "cover_letter": cover_letter,
@@ -292,3 +293,53 @@ async def skill_gap_endpoint(request: GenerateRequest):
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "CoverCraft"}
+
+
+@app.post("/download-cover-letter-pdf-de")
+async def download_cover_letter_pdf_de(
+    request: GenerateRequest,
+    authorization: str = Header(default=None)
+):
+    user_id = get_user_id(authorization)
+    cv_text = get_user_cv(user_id)
+    if cv_text:
+        add_cv(cv_text, user_id=user_id)
+
+    text = generate_cover_letter(
+        company=request.company,
+        role=request.role,
+        jd_text=request.jd_text,
+        user_id=user_id,
+        lang="de",
+    )
+    pdf_bytes = generate_cover_letter_pdf(text, request.company, request.role)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=cover_letter_{request.company}_DE.pdf"},
+    )
+
+
+@app.post("/download-cv-pdf-de")
+async def download_cv_pdf_de(
+    request: GenerateRequest,
+    authorization: str = Header(default=None)
+):
+    user_id = get_user_id(authorization)
+    cv_text = get_user_cv(user_id)
+    if cv_text:
+        add_cv(cv_text, user_id=user_id)
+
+    text = generate_custom_cv(
+        company=request.company,
+        role=request.role,
+        jd_text=request.jd_text,
+        user_id=user_id,
+        lang="de",
+    )
+    pdf_bytes = generate_cv_pdf(text)
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=cv_{request.company}_DE.pdf"},
+    )

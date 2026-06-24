@@ -1,5 +1,5 @@
 """
-ATS-Friendly CV Generator — uses user's uploaded CV from ChromaDB.
+ATS-Friendly CV Generator — European format matching SrikarKodi.pdf style
 """
 import os
 import re
@@ -19,8 +19,8 @@ def clean_context(text: str) -> str:
     return text[:4000]
 
 
-def generate_custom_cv(company: str, role: str, jd_text: str, user_id: str = "default") -> str:
-    cv_chunks = get_cv_context("experience education skills projects", n=8, user_id=user_id)
+def generate_custom_cv(company: str, role: str, jd_text: str, user_id: str = "default", lang: str = "en") -> str:
+    cv_chunks = get_cv_context("experience education skills projects summary", n=8, user_id=user_id)
     jd_chunks = get_jd_context(company, "requirements skills responsibilities", n=5, user_id=user_id)
 
     cv_context = clean_context("\n".join(cv_chunks)) if cv_chunks else ""
@@ -30,56 +30,83 @@ def generate_custom_cv(company: str, role: str, jd_text: str, user_id: str = "de
     if not cv_context:
         return "Please upload your CV first before generating a tailored CV."
 
-    prompt = f"""You are an expert ATS optimization specialist. Rewrite the candidate's CV to be perfectly tailored for this specific role.
+    cv_lang_instruction = "Write the ENTIRE CV in German (Deutsch). ALL section headers (PROFIL, ERFAHRUNG, PROJEKTE, AUSBILDUNG, FÄHIGKEITEN), bullet points and descriptions MUST be in German." if lang == "de" else "Write in English."
 
-CANDIDATE CV CONTENT:
+    prompt = f"""You are a professional European CV writer. Rewrite this candidate's CV tailored for {role} at {company}.
+
+CANDIDATE CV:
 {cv_context}
 
-JOB DESCRIPTION CONTEXT:
+JOB REQUIREMENTS:
 {jd_context}
 
-KEY SKILLS FROM JD: {", ".join(jd_skills)}
+KEY SKILLS FROM JD: {", ".join(jd_skills[:15])}
 
-COMPANY: {company}
-ROLE: {role}
+OUTPUT THE CV IN EXACTLY THIS FORMAT — no deviations:
 
-Rewrite the CV following these rules:
+[FULL NAME FROM CV]
+[Professional Title] • [Specialty] • [Specialty]
+[email] | [phone] | [City, Country]
+[linkedin url] | [github url]
 
-1. HEADER — Keep the candidate's name and contact details exactly as they appear in their CV
-2. SUMMARY — Add a 2-line professional summary targeting this specific role at {company}
-3. SKILLS — Reorder skills to prioritise ones mentioned in the JD. Group by category if possible (e.g., "Languages & Frameworks: Python, FastAPI...")
-4. EXPERIENCE — Format each entry STRICTLY like this:
-   Job Title | Month Year – Month Year
-   Company, Location
-   • Bullet point in Google XYZ format: "Accomplished [X] as measured by [Y] by doing [Z]"
-   • Inject relevant JD keywords naturally
-   • Keep all real metrics from the original CV
-   • Every bullet must start with a strong action verb
-5. PROJECTS — Format each entry STRICTLY like this:
-   Project Name | Year – Year
-   Description / Link
-   • Bullet point...
-6. EDUCATION — Format each entry STRICTLY like this:
-   Degree Name | Start Year – End Year
-   Institution, Location
-   • Relevant coursework bullet (optional)
+PROFILE
+[3-4 sentences. Mention {company} specifically. Use keywords from JD. Reference real projects from CV. No generic phrases.]
 
-CRITICAL FORMATTING RULES:
-- Standard section headers in ALL CAPS: SUMMARY, EXPERIENCE, PROJECTS, EDUCATION, SKILLS
-- Job title and dates MUST be on the SAME line separated by " | "
-- Company/institution MUST be on the line immediately after the title+dates line
-- NEVER put dates on separate lines from the job title
-- No tables, no columns, no special characters except bullets (-)
-- NEVER spell out numbers — always use digits and % symbol
+EXPERIENCE
+
+[Job Title] [Mon YYYY – Mon YYYY]
+[Company Name] [City, Country]
+- [Strong action verb + specific achievement + metric]
+- [Strong action verb + specific achievement + metric]
+- [Strong action verb + specific achievement + metric]
+
+[Job Title] [Mon YYYY – Mon YYYY]
+[Company Name] [City, Country]
+- [Achievement with metric]
+- [Achievement with metric]
+
+PROJECTS
+
+[Project Name] – [Short Description] [YYYY – Present]
+[URL] | Live in Production
+- [What it does, tech stack used]
+- [Key metric or real-world impact]
+
+EDUCATION
+
+[Degree Name] [Mon YYYY – Mon YYYY]
+[University Name] [City, Country]
+- [Relevant coursework if applicable]
+
+[Degree Name] [YYYY – YYYY]
+[University Name] [Country]
+
+SKILLS
+
+Languages & Frameworks: [comma separated from CV, prioritise JD matches]
+AI & ML: [comma separated from CV]
+Infrastructure: [comma separated from CV]
+Languages: [spoken languages from CV with levels]
+
+STRICT RULES:
+- Use ONLY real information from the candidate's CV — never invent
+- Job title and date on SAME LINE separated by spaces (no pipe separator between them)
+- Company name and location on the line BELOW the job title
+- Dates format: Mon YYYY – Mon YYYY (e.g. May 2023 – Aug 2025) or YYYY – YYYY for education
+- Every bullet starts with a past tense action verb
+- Every bullet has a specific number, %, or metric
+- NEVER use "responsible for", "helped with", "assisted in"
 - NEVER add skills the candidate does not have
-- Plain text format only
-
-Output the complete rewritten CV. Nothing else."""
+- No photo, age, nationality, marital status (European ATS standard)
+- Skills section at the BOTTOM
+- Output ONLY the CV. No explanation, no preamble."""
 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=2000,
-        temperature=0.4,
+        temperature=0.3,
     )
-    return response.choices[0].message.content
+    result = response.choices[0].message.content
+    print("=== RAW CV OUTPUT ===\n" + result + "\n=== END ===")
+    return result
